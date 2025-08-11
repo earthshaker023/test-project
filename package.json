@@ -14,6 +14,9 @@
     "@mysten/sui": "^1.37.1",
     "@types/node": "^24.2.1",
     "node-seal": "^5.1.6",
+    "valibot": "^1.1.0"
+  },
+  "devDependencies": {
     "typescript": "^5.9.2"
   }
 }
