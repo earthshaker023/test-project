@@ -37,8 +37,9 @@ async function main() {
     const inputCodes = Array.from(input).map(c => c.charCodeAt(0));
     while (inputCodes.length < encoder.slotCount) inputCodes.push(0);
 
-    // Encode and encrypt
-    const inputBigUint64Array = BigUint64Array.from(inputCodes);
+    // Convert to BigInt for BigUint64Array
+    const inputBigInts = inputCodes.map(n => BigInt(n));
+    const inputBigUint64Array = BigUint64Array.from(inputBigInts);
     const plain = encoder.encode(inputBigUint64Array);
     if (!plain) {
         throw new Error('Encoding failed, plain is undefined');
