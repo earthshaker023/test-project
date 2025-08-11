@@ -11,8 +11,8 @@ const ALLOWLIST_PACKAGE_ID = '0xb5c84864a69cb0b495caf548fa2bf0d23f6b69b131fa987d
 const SUI_RPC_URL = 'https://fullnode.testnet.sui.io:443'; // Sui testnet RPC
 
 // Replace with your actual keypairs
-const ADMIN_PRIVATE_KEY = '<ADMIN_PRIVATE_KEY_BASE64>'; // Admin wallet (gas sponsor)
-const USER_ADDRESS = '<USER_WALLET_ADDRESS>'; // Wallet to be added to allowlist
+const ADMIN_PRIVATE_KEY = 'suiprivkey1qpjx9gjjr7j4vjv4s26fa9f4htpurey8xqt5wszkn7pgymumqnwqk62fzt5'; // Admin wallet (gas sponsor)
+const USER_ADDRESS = '0x72a24df80ed713fd193e43efe860eb36f301ecef59566c03e7784b210b879a3a'; // Wallet to be added to allowlist
 
 async function addToAllowlist() {
     console.log('1. Adding user to allowlist...');
