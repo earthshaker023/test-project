@@ -5,21 +5,49 @@ import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { bcs } from '@mysten/bcs';
 import fs from 'fs';
 import Seal from 'node-seal';
+import { decodeSuiPrivateKey } from '@mysten/sui.js/cryptography';
 
 // --- Allowlist Setup Constants ---
-const ALLOWLIST_PACKAGE_ID = '1qpdhqd3g5rekngl4wtsw94ygv09q7eax0k9a3659qehr2stxyz3uw6j3wzp';
+const ALLOWLIST_PACKAGE_ID = 'suiprivkey1qpdhqd3g5rekngl4wtsw94ygv09q7eax0k9a3659qehr2stxyz3uw6j3wzp';
 const SUI_RPC_URL = 'https://fullnode.testnet.sui.io:443'; // Sui testnet RPC
 
 // Replace with your actual keypairs
 const ADMIN_PRIVATE_KEY = 'suiprivkey1qpjx9gjjr7j4vjv4s26fa9f4htpurey8xqt5wszkn7pgymumqnwqk62fzt5'; // Admin wallet (gas sponsor)
 const USER_ADDRESS = '0x72a24df80ed713fd193e43efe860eb36f301ecef59566c03e7784b210b879a3a'; // Wallet to be added to allowlist
 
+function getAdminSecretKeyBytes(): Uint8Array {
+    // If the key is in sui bech32 format, decode it
+    if (ADMIN_PRIVATE_KEY.startsWith('suiprivkey')) {
+        const { secretKey } = decodeSuiPrivateKey(ADMIN_PRIVATE_KEY);
+        if (secretKey.length === 64) {
+            return secretKey;
+        }
+        if (secretKey.length === 32) {
+            // Reconstruct the 64-byte Ed25519 key (private + public)
+            const priv = secretKey;
+            // Use the Ed25519Keypair helper to derive the public key
+            const kp = Ed25519Keypair.fromSecretKey(priv);
+            return kp.export().privateKey;
+        }
+        throw new Error('Decoded secret key is not 32 or 64 bytes');
+    }
+    // Otherwise, assume it's base64-encoded
+    const secretKeyBytes = Buffer.from(ADMIN_PRIVATE_KEY, 'base64');
+    if (secretKeyBytes.length === 64) {
+        return secretKeyBytes;
+    }
+    if (secretKeyBytes.length === 32) {
+        // Reconstruct the 64-byte Ed25519 key (private + public)
+        const priv = secretKeyBytes;
+        const kp = Ed25519Keypair.fromSecretKey(priv);
+        return kp.export().privateKey;
+    }
+    throw new Error('ADMIN_PRIVATE_KEY must be a base64-encoded 32 or 64-byte Ed25519 secret key');
+}
+
 async function addToAllowlist() {
     console.log('1. Adding user to allowlist...');
-    const secretKeyBytes = Buffer.from(ADMIN_PRIVATE_KEY, 'base64');
-    if (secretKeyBytes.length !== 64) {
-        throw new Error('ADMIN_PRIVATE_KEY must be a base64-encoded 64-byte Ed25519 secret key');
-    }
+    const secretKeyBytes = getAdminSecretKeyBytes();
     const adminKeypair = Ed25519Keypair.fromSecretKey(secretKeyBytes);
     const suiClient = new SuiClient({ url: SUI_RPC_URL });
 
