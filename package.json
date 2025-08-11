@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@mysten/bcs": "^1.7.0",
-    "@mysten/sui.js": "^0.54.1",
+    "@mysten/sui": "^1.37.1",
     "@types/node": "^24.2.1",
     "node-seal": "^5.1.6",
     "typescript": "^5.9.2"

@@ -1,8 +1,8 @@
-// --- Allowlist Setup Imports ---
-import { SuiClient } from '@mysten/sui.js/client';
-import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
-import { bcs } from '@mysten/bcs';
+import { SuiClient } from '@mysten/sui/client';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import { Transaction } from '@mysten/sui/transactions';
+// import { bcs } from '@mysten/bcs';
+import { decodeSuiPrivateKey } from "@mysten/sui/cryptography"; // Import decodeSuiPrivateKey
 import fs from 'fs';
 import Seal from 'node-seal';
 
@@ -11,24 +11,26 @@ const ALLOWLIST_PACKAGE_ID = '0xb5c84864a69cb0b495caf548fa2bf0d23f6b69b131fa987d
 const SUI_RPC_URL = 'https://fullnode.testnet.sui.io:443'; // Sui testnet RPC
 
 // Replace with your actual keypairs
-const ADMIN_PRIVATE_KEY = 'suiprivkey1qpjx9gjjr7j4vjv4s26fa9f4htpurey8xqt5wszkn7pgymumqnwqk62fzt5'; // Admin wallet (gas sponsor)
+const ADMIN_PRIVATE_KEY_BECH32 = 'suiprivkey1qpjx9gjjr7j4vjv4s26fa9f4htpurey8xqt5wszkn7pgymumqnwqk62fzt5'; // Admin wallet (gas sponsor)
 const USER_ADDRESS = '0x72a24df80ed713fd193e43efe860eb36f301ecef59566c03e7784b210b879a3a'; // Wallet to be added to allowlist
 
 async function addToAllowlist() {
     console.log('1. Adding user to allowlist...');
-    const secretKeyBytes = Buffer.from(ADMIN_PRIVATE_KEY, 'base64');
-    if (secretKeyBytes.length !== 64) {
-        throw new Error('ADMIN_PRIVATE_KEY must be a base64-encoded 64-byte Ed25519 secret key');
-    }
-    const adminKeypair = Ed25519Keypair.fromSecretKey(secretKeyBytes);
+
+    // Decode the Bech32 encoded private key
+    const { secretKey, schema } = decodeSuiPrivateKey(ADMIN_PRIVATE_KEY_BECH32);
+
+    // Create the Ed25519Keypair from the raw secret key bytes
+    const adminKeypair = Ed25519Keypair.fromSecretKey(secretKey);
+
     const suiClient = new SuiClient({ url: SUI_RPC_URL });
 
     // Build the transaction block
-    const tx = new TransactionBlock();
+    const tx = new Transaction();
     tx.moveCall({
         target: `${ALLOWLIST_PACKAGE_ID}::allowlist::add_user`,
         arguments: [
-            tx.pure(USER_ADDRESS, 'address')
+            tx.pure.address(USER_ADDRESS), // User address to be added
         ]
     });
 
