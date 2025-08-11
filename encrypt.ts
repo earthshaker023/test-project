@@ -1,7 +1,6 @@
 // --- Allowlist Setup Imports ---
 import { SuiClient } from '@mysten/sui.js/client';
 import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
-import { RawSigner } from '@mysten/sui.js/signer';
 import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { bcs } from '@mysten/bcs';
 import fs from 'fs';
@@ -17,22 +16,33 @@ const USER_ADDRESS = '<USER_WALLET_ADDRESS>'; // Wallet to be added to allowlist
 
 async function addToAllowlist() {
     console.log('1. Adding user to allowlist...');
-    const adminKeypair = Ed25519Keypair.fromSecretKey(Buffer.from(ADMIN_PRIVATE_KEY, 'base64'));
+    const secretKeyBytes = Buffer.from(ADMIN_PRIVATE_KEY, 'base64');
+    if (secretKeyBytes.length !== 64) {
+        throw new Error('ADMIN_PRIVATE_KEY must be a base64-encoded 64-byte Ed25519 secret key');
+    }
+    const adminKeypair = Ed25519Keypair.fromSecretKey(secretKeyBytes);
     const suiClient = new SuiClient({ url: SUI_RPC_URL });
-    const signer = new RawSigner(adminKeypair, suiClient);
 
-    // Prepare the transaction to call the allowlist's add_user function
+    // Build the transaction block
     const tx = new TransactionBlock();
-    // The function signature may vary; check the package for exact call
     tx.moveCall({
         target: `${ALLOWLIST_PACKAGE_ID}::allowlist::add_user`,
         arguments: [
-            tx.pure(USER_ADDRESS)
+            tx.pure(USER_ADDRESS, 'address')
         ]
     });
 
-    // Sponsor gas and send transaction
-    const result = await signer.signAndExecuteTransactionBlock({ transactionBlock: tx });
+    // Sign and execute the transaction directly using the keypair and client
+    const { bytes, signature } = await tx.sign({
+        client: suiClient,
+        signer: adminKeypair,
+    });
+
+    const result = await suiClient.executeTransactionBlock({
+        transactionBlock: bytes,
+        signature,
+    });
+
     console.log('Allowlist transaction response:', result);
 }
 
@@ -60,22 +70,17 @@ async function main() {
         throw new Error('Encryption parameters are not valid');
     }
 
-    // Generate keys
     const keyGenerator = seal.KeyGenerator(context);
     const publicKey = keyGenerator.createPublicKey();
     // const secretKey = keyGenerator.secretKey(); // Not used for encryption
 
-    // Create Encryptor, Encoder
     const encryptor = seal.Encryptor(context, publicKey);
     const encoder = seal.BatchEncoder(context);
 
-    // Read input file
     const input = fs.readFileSync('input.txt', 'utf8');
-    // Convert string to char codes and pad to poly modulus degree
     const inputCodes = Array.from(input).map(c => c.charCodeAt(0));
     while (inputCodes.length < encoder.slotCount) inputCodes.push(0);
 
-    // Convert to BigInt for BigUint64Array
     const inputBigInts = inputCodes.map(n => BigInt(n));
     const inputBigUint64Array = BigUint64Array.from(inputBigInts);
     const plain = encoder.encode(inputBigUint64Array);
@@ -85,10 +90,8 @@ async function main() {
     const cipher = seal.CipherText();
     encryptor.encrypt(plain, cipher);
 
-    // Serialize ciphertext to base64
     const cipherBase64 = cipher.save();
 
-    // Write to output file
     fs.writeFileSync('output.txt', cipherBase64);
 
     console.log('Encryption complete. Output written to output.txt');
