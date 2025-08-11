@@ -7,7 +7,7 @@ import fs from 'fs';
 import Seal from 'node-seal';
 
 // --- Allowlist Setup Constants ---
-const ALLOWLIST_PACKAGE_ID = '0xb5c84864a69cb0b495caf548fa2bf0d23f6b69b131fa987d6f896d069de64429';
+const ALLOWLIST_PACKAGE_ID = '1qpdhqd3g5rekngl4wtsw94ygv09q7eax0k9a3659qehr2stxyz3uw6j3wzp';
 const SUI_RPC_URL = 'https://fullnode.testnet.sui.io:443'; // Sui testnet RPC
 
 // Replace with your actual keypairs
