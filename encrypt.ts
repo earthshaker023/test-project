@@ -1,5 +1,8 @@
 // --- Allowlist Setup Imports ---
-import { SuiClient, Ed25519Keypair, RawSigner, TransactionBlock } from '@mysten/sui.js/client';
+import { SuiClient } from '@mysten/sui.js/client';
+import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
+import { RawSigner } from '@mysten/sui.js/signer';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { bcs } from '@mysten/bcs';
 import fs from 'fs';
 import Seal from 'node-seal';
